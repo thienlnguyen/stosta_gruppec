@@ -11,7 +11,13 @@ library(shiny)
 library(readr)
 
 breast_cancer_data <- read_delim("breast_cancer_data.csv", 
-                                 delim = ";", escape_double = FALSE, trim_ws = TRUE)
+                                 delim = ";",
+                                 skip = 1,
+                                 col_names = FALSE,
+                                 escape_double = FALSE,
+                                 trim_ws = TRUE)
+
+breast_cancer_data <- breast_cancer_data[-1]
 
 header <- unlist(breast_cancer_data[1, ])
 
@@ -24,8 +30,6 @@ ui <- fluidPage(
     # Application title
     titlePanel("Breast Cancer"),
 
-   
-
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
@@ -37,12 +41,21 @@ ui <- fluidPage(
             selectInput("var", 
                         label = "Choose a variable to display",
                         choices = header_list,
-                        selected = header_list[3]),
+                        selected = header_list[3])
         ),
-        mainPanel(
-           plotOutput("distPlot"),
-        )
-    )
+        sliderInput("num_values", "Anzahl der Werte:", min = 1, max = 100, value = 1),
+        actionButton("calculate", "Berechnen"),
+        selectInput("var2", 
+                    label = "Choose a variable to display",
+                    choices = header_list,
+                    selected = header_list[3])
+    ),
+    
+    mainPanel(
+        plotOutput("distPlot"),
+       textOutput("mean_output")
+        ),
+    
 )
 
 # Define server logic required to draw a histogram
@@ -59,8 +72,15 @@ server <- function(input, output) {
         hist(x, breaks = bins, col = 'darkgray', border = 'white',
              xlab = 'Waiting time to next eruption (in mins)',
              main = 'Histogram of waiting times')
+       
+        observeEvent(input$calculate, {
+          sample <- sample_n(breast_cancer_data[[input$var2]], input$num_values)  # Eine Stichprobe von Daten auswählen
+          values <- sample  # Annahme: Die Werte befinden sich in einer Spalte namens "value_column"
+          mean_value <- mean(values)  # Mittelwert berechnen
+          output$mean_output <- renderText(paste("Der Mittelwert ist:", mean_value))
+        })
     })
 }
 
-# Run the application 
+#Run the application 
 shinyApp(ui = ui, server = server)
