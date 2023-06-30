@@ -7,16 +7,12 @@
 #    http://shiny.rstudio.com/
 #
 
+library(ggplot2)
 library(shiny)
 library(readr)
 
 breast_cancer_data <- read_delim("breast_cancer_data.csv", 
-                                 delim = ";", escape_double = FALSE, trim_ws = TRUE)
-
-header <- unlist(breast_cancer_data[1, ])
-
-# Konvertieren des Vektors in eine Liste
-header_list <- as.list(header)
+                                 delim = ";", escape_double = FALSE, trim_ws = TRUE,show_col_types = FALSE)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -29,37 +25,54 @@ ui <- fluidPage(
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
+            sliderInput("sample",
+                        "Stichprobengröße",
                         min = 1,
-                        max = 50,
+                        max = nrow(breast_cancer_data),
                         value = 30),
             selectInput("var", 
                         label = "Choose a variable to display",
-                        choices = header_list,
-                        selected = header_list[3]),
+                        choices = c("Alter", 
+                                    "Größe des Tumors",
+                                    "Anzahl der Lymphknoten"),
+                        selected = "Alter")
         ),
         mainPanel(
-           plotOutput("distPlot"),
+           plotOutput("normalplot")
         )
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        
+    
+    output$normalplot <- renderPlot({
+      #sample <- seq(min(x), max(x), length.out = input$sample + 1)
+      
+      if (input$var == "Alter") {
         x <- breast_cancer_data$age
-        
-        # generate bins based on input$bins from ui.R
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+        xmean <- mean(x)
+        xsd <- sd(x)
+        var <- breast_cancer_data
+        ggplot(data = breast_cancer_data, aes(x=age)) +
+        stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "red")
+      } else if(input$var == "Größe des Tumors") {
+        x <- breast_cancer_data$size
+        xmean <- mean(x)
+        xsd <- sd(x)
+        var <- breast_cancer_data
+        ggplot(data = breast_cancer_data, aes(x=size)) +
+        stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "red")
+      }else if(input$var == "Anzahl der Lymphknoten") {
+        x <- breast_cancer_data$nodes
+        xmean <- mean(x)
+        xsd <- sd(x)
+        var <- breast_cancer_data
+        ggplot(data = breast_cancer_data, aes(x=nodes)) +
+        stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "red")
+      }
+      })
+    
 }
 
 # Run the application 
