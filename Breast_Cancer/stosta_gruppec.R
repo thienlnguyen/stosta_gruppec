@@ -54,7 +54,9 @@ ui <- fluidPage(
         ),
         mainPanel(
            plotOutput("normalplot"),
-           textOutput("resultText")
+           
+           textOutput("selected_var1"),
+           textOutput("selected_var")
         )
     )
 )
@@ -75,19 +77,6 @@ server <- function(input, output, session) {
     updateSliderInput(session, "mu", max = max(data))
   })
   
-  
-  output$selected_var <- renderText({ 
-    x <- sample(breast_cancer_data$age[breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
-    xmean <- mean(x)
-    xsd <- sd(x)
-    var <- x
-    z <- qnorm(1 - (input$alpha/2), input$mu, xsd)
-    y <- dnorm(x,input$mu, xsd)
-
-     qnorm(1-(input$alpha/2), input$mu, xsd)
-     y
-  })
-  
   output$normalplot <- renderPlot({
     x = c()
     if (input$topic == "Alter") {
@@ -96,20 +85,29 @@ server <- function(input, output, session) {
       } else {
         x <- sample(breast_cancer_data$age, input$sample, replace=TRUE)
       }
-      data <- x
       xmean <- mean(x)
       xsd <- sd(x)
       var <- x
-      z <- qnorm(1 - (input$alpha/2), input$mu, xsd)
-      y <- dnorm(x,input$mu, xsd)
+      a <- qnorm((input$alpha/2), xmean, xsd)
+      b <- qnorm(1-(input$alpha/2), xmean, xsd)
+      y <- dnorm(x,input$mu,xsd)
       
-      ggplot(data = breast_cancer_data, aes(x=age)) +
-      stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "black") +
-      geom_area(data = subset(data, x <= z),
-                aes(ymax = y, ymin =0),
-                fill = "steelblue",
-                alpha = 0.2)
-      
+      if(a<0){
+        ggplot(data = breast_cancer_data, aes(x = age)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+        
+      } else {
+        ggplot(data = breast_cancer_data, aes(x = age)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = a, color = "red") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+      }
+
     } else if(input$topic == "Größe des Tumors") {
       if(input$gradeTumor == TRUE){
         x <- sample(breast_cancer_data$size[breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
@@ -120,17 +118,25 @@ server <- function(input, output, session) {
       xmean <- mean(x)
       xsd <- sd(x)
       var <- x
-      z <- qnorm(1 - input$alpha/2, input$mu, xsd)
-      lower_limit <- input$mu - z * xsd
-      upper_limit <- input$mu + z * xsd
+      a <- qnorm((input$alpha/2), xmean, xsd)
+      b <- qnorm(1-(input$alpha/2), xmean, xsd)
       y <- dnorm(x,input$mu,xsd)
       
-      ggplot(data = breast_cancer_data, aes(x=size)) +
-        stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "black") #+
-       # geom_area(data = subset(breast_cancer_data, x <= qnorm(1-input$alpha/2, input$mu, xsd)),
-       #           aes(ymax = y, ymin = 0),
-       #           fill = "lightblue",
-       #           alpha = input$alpha)
+      if(a<0){
+        ggplot(data = breast_cancer_data, aes(x = size)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+        
+      } else {
+        ggplot(data = breast_cancer_data, aes(x = size)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = a, color = "red") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+      }
       
     }else if(input$topic == "Anzahl der Lymphknoten") {
       if(input$gradeTumor == TRUE){
@@ -141,17 +147,25 @@ server <- function(input, output, session) {
       xmean <- mean(x)
       xsd <- sd(x)
       var <- x
-      z <- qnorm(1 - input$alpha/2, input$mu, xsd)
-      lower_limit <- input$mu - z * xsd
-      upper_limit <- input$mu + z * xsd
-      y <- dnorm(x, input$mu, xsd)
+      a <- qnorm((input$alpha/2), xmean, xsd)
+      b <- qnorm(1-(input$alpha/2), xmean, xsd)
+      y <- dnorm(x,input$mu,xsd)
       
-      ggplot(data = breast_cancer_data, aes(x=nodes)) +
-        stat_function(fun = function(x) dnorm(x,xmean,xsd),colour = "black") #+
-        #geom_area(data = subset(breast_cancer_data, x <= qnorm(1-input$alpha/2, input$mu, xsd)),
-        #          aes(ymax = y, ymin = 0),
-        #          fill = "lightblue",
-        #          alpha = input$alpha)
+      if(a<0){
+        ggplot(data = breast_cancer_data, aes(x = nodes)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+        
+      } else {
+        ggplot(data = breast_cancer_data, aes(x = nodes)) +
+          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+          geom_vline(xintercept = a, color = "red") +
+          geom_vline(xintercept = b, color = "red") +
+          xlab("Size") +
+          ylab("Density")
+      }
     }
   })
 }
