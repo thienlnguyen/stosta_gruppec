@@ -25,7 +25,7 @@ ui <- fluidPage(
             selectInput("topic", 
                         label = "Welchen Wert möchtest du testen?",
                         choices = c("Alter", 
-                                    "Größe des Tumors",
+                                    "Größe des Tumors in mm",
                                     "Anzahl der Lymphknoten"),
                         selected = "Alter"),
             checkboxInput("gradeTumor", "Nach Tumorgrad selektieren"),
@@ -66,106 +66,54 @@ server <- function(input, output, session) {
   
   # Max erwartungswert anpassen, je nach Thema
   observeEvent(input$topic, {
-    data = c()
+    col = ""
     if (input$topic == "Alter") {
-      data <- breast_cancer_data$age
-    } else if(input$topic == "Größe des Tumors") {
-      data <- breast_cancer_data$size
+      col= "age"
+    } else if(input$topic == "Größe des Tumors in mm") {
+      col = "size"
     } else if(input$topic == "Anzahl der Lymphknoten") {
-      data <- breast_cancer_data$nodes
+      col= "nodes"
     }
-    updateSliderInput(session, "mu", max = max(data))
+    updateSliderInput(session, "mu", max = max(breast_cancer_data[[col]]))
   })
-  
-  output$normalplot <- renderPlot({
-    x = c()
-    if (input$topic == "Alter") {
-      if(input$gradeTumor == TRUE){
-        x <- sample(breast_cancer_data$age[breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
-      } else {
-        x <- sample(breast_cancer_data$age, input$sample, replace=TRUE)
-      }
-      xmean <- mean(x)
-      xsd <- sd(x)
-      var <- x
-      a <- qnorm((input$alpha/2), xmean, xsd)
-      b <- qnorm(1-(input$alpha/2), xmean, xsd)
-      y <- dnorm(x,input$mu,xsd)
-      
-      if(a<0){
-        ggplot(data = breast_cancer_data, aes(x = age)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-        
-      } else {
-        ggplot(data = breast_cancer_data, aes(x = age)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = a, color = "red") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-      }
 
-    } else if(input$topic == "Größe des Tumors") {
-      if(input$gradeTumor == TRUE){
-        x <- sample(breast_cancer_data$size[breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
-      } else {
-        x <- sample(breast_cancer_data$size, input$sample, replace=TRUE)
-      }
+  output$normalplot <- renderPlot({
+    col = ""
+    x = c()
+    
+    if (input$topic == "Alter") {
+      col = "age"
+    } else if(input$topic == "Größe des Tumors in mm") {
+      col = "size"
+    } else if(input$topic == "Anzahl der Lymphknoten") {
+      col =  "nodes"
+    }
+    
+    if(input$gradeTumor == TRUE){
+      x <- sample(breast_cancer_data[[col]][breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
+    } else {
+      x <- sample(breast_cancer_data[[col]], input$sample, replace=TRUE)
+    }
+    xmean <- mean(x)
+    xsd <- sd(x)
+    
+    a <- qnorm((input$alpha/2), xmean, xsd)
+    b <- qnorm(1-(input$alpha/2), xmean, xsd)
+    
+    if(a<0){
+      ggplot(data = breast_cancer_data, aes(x = breast_cancer_data[[col]])) +
+        stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+        geom_vline(xintercept = b, color = "red") +
+        xlab(input$topic) +
+        ylab("Density")
       
-      xmean <- mean(x)
-      xsd <- sd(x)
-      var <- x
-      a <- qnorm((input$alpha/2), xmean, xsd)
-      b <- qnorm(1-(input$alpha/2), xmean, xsd)
-      y <- dnorm(x,input$mu,xsd)
-      
-      if(a<0){
-        ggplot(data = breast_cancer_data, aes(x = size)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-        
-      } else {
-        ggplot(data = breast_cancer_data, aes(x = size)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = a, color = "red") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-      }
-      
-    }else if(input$topic == "Anzahl der Lymphknoten") {
-      if(input$gradeTumor == TRUE){
-        x <- sample(breast_cancer_data$nodes[breast_cancer_data$grade == input$grade], input$sample, replace=TRUE)
-      } else {
-        x <- sample(breast_cancer_data$nodes, input$sample, replace=TRUE)
-      }
-      xmean <- mean(x)
-      xsd <- sd(x)
-      var <- x
-      a <- qnorm((input$alpha/2), xmean, xsd)
-      b <- qnorm(1-(input$alpha/2), xmean, xsd)
-      y <- dnorm(x,input$mu,xsd)
-      
-      if(a<0){
-        ggplot(data = breast_cancer_data, aes(x = nodes)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-        
-      } else {
-        ggplot(data = breast_cancer_data, aes(x = nodes)) +
-          stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
-          geom_vline(xintercept = a, color = "red") +
-          geom_vline(xintercept = b, color = "red") +
-          xlab("Size") +
-          ylab("Density")
-      }
+    } else {
+      ggplot(data = breast_cancer_data, aes(x = breast_cancer_data[[col]])) +
+        stat_function(fun = function(x) dnorm(x, xmean, xsd), color = "black") +
+        geom_vline(xintercept = a, color = "red") +
+        geom_vline(xintercept = b, color = "red") +
+        xlab(input$topic) +
+        ylab("Density")
     }
   })
 }
