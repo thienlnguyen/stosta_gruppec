@@ -53,10 +53,14 @@ ui <- fluidPage(
                         value = 10)
         ),
         mainPanel(
-           plotOutput("normalplot"),
            
-           textOutput("selected_var1"),
-           textOutput("selected_var")
+          tabsetPanel(type = "tabs",
+                      tabPanel("Plot", plotOutput("normalplot"), textOutput("selected_var1"), textOutput("selected_var")),
+                      tabPanel("Summary"),
+                      tabPanel("Table")
+          ),
+           
+           
         )
     )
 )
