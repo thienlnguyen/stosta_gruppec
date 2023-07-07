@@ -63,11 +63,15 @@ ui <- fluidPage(
                   value = 10),
     ),
     mainPanel(
-      plotOutput("normalplot"),
-      htmlOutput("key_figures"),
-      htmlOutput("hypotest_output")
+      tabsetPanel(
+        tabPanel("Plot", plotOutput("normalplot"), htmlOutput("key_figures"), htmlOutput("hypotest_output")),
+        tabPanel("Vergleiche"),
+        tabPanel("Informationen"),
+        tabPanel("Quellen")
+      
     )
   )
+)
 )
 
 
